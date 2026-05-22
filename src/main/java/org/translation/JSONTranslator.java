@@ -6,6 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.json.JSONObject;
 
 import org.json.JSONArray;
 
@@ -15,7 +18,7 @@ import org.json.JSONArray;
  */
 public class JSONTranslator implements Translator {
 
-    // TODO Task: pick appropriate instance variables for this class
+    private Map<String, Map<String, String>> translations;
 
     /**
      * Constructs a JSONTranslator using data from the sample.json resources file.
@@ -31,14 +34,32 @@ public class JSONTranslator implements Translator {
      */
     public JSONTranslator(String filename) {
         // read the file to get the data to populate things...
+
+        translations = new HashMap<>();
+
         try {
 
             String jsonString = Files.readString(Paths.get(getClass().getClassLoader().getResource(filename).toURI()));
 
             JSONArray jsonArray = new JSONArray(jsonString);
 
-            // TODO Task: use the data in the jsonArray to populate your instance variables
-            //            Note: this will likely be one of the most substantial pieces of code you write in this lab.
+            for (int i = 0; i < jsonArray.length(); i++) {
+
+                JSONObject countryObj = jsonArray.getJSONObject(i);
+
+                String countryCode = countryObj.getString("alpha3");
+
+                Map<String, String> languageMap = new HashMap<>();
+
+                for (String key : countryObj.keySet()) {
+
+                    if (!"id".equals(key) && !"alpha2".equals(key) && !"alpha3".equals(key)) {
+                        languageMap.put(key, countryObj.getString(key));
+                    }
+                }
+
+                translations.put(countryCode, languageMap);
+            }
 
         }
         catch (IOException | URISyntaxException ex) {
@@ -48,21 +69,16 @@ public class JSONTranslator implements Translator {
 
     @Override
     public List<String> getCountryLanguages(String country) {
-        // TODO Task: return an appropriate list of language codes,
-        //            but make sure there is no aliasing to a mutable object
-        return new ArrayList<>();
+        return new ArrayList<>(translations.get(country).keySet());
     }
 
     @Override
     public List<String> getCountries() {
-        // TODO Task: return an appropriate list of country codes,
-        //            but make sure there is no aliasing to a mutable object
-        return new ArrayList<>();
+        return new ArrayList<>(translations.keySet());
     }
 
     @Override
     public String translate(String country, String language) {
-        // TODO Task: complete this method using your instance variables as needed
-        return null;
+        return translations.get(country).get(language);
     }
 }
